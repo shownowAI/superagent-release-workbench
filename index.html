@@ -23,7 +23,7 @@
     <main class="main-pane">
       <header class="titlebar"><div class="breadcrumb"><span data-icon="sidebar"></span><span class="crumb-space">Agent Notes</span><span class="crumb-slash">/</span><strong>发布任务</strong></div><span class="release-label"><i></i>1.0 发布</span></header>
       <section class="content">
-        <div class="page-heading"><div><h1>发布任务</h1><p>把上线前的准备，一件件做好。</p></div><div class="heading-actions"><div class="progress-summary"><span id="progress-label">1 / 6 已完成</span><span class="progress-track"><i id="progress-fill"></i></span></div></div></div>
+        <div class="page-heading"><div><h1>发布任务</h1><p>把上线前的准备，一件件做好。</p></div><div class="heading-actions"><div class="progress-summary"><span id="progress-label">1 / 6 已完成</span><span class="progress-track"><i id="progress-fill"></i></span></div><button class="primary-button" id="generate-checklist" aria-expanded="false"><span data-icon="list"></span>生成发布清单</button></div></div>
         <div class="workspace-grid" id="workspace-grid">
           <section class="task-pane" aria-label="发布任务列表">
             <div class="toolbar" role="toolbar" aria-label="任务筛选">
@@ -34,6 +34,20 @@
             </div>
             <div class="table-wrap"><table aria-label="产品发布任务"><colgroup><col class="col-select"><col class="col-id"><col><col class="col-status"><col class="col-deadline"><col class="col-priority"></colgroup><thead><tr><th><input id="select-all" type="checkbox" aria-label="选择当前显示的全部任务"></th><th>编号</th><th>事项</th><th>状态</th><th>截止</th><th>优先级</th></tr></thead><tbody id="task-rows"></tbody></table></div>
             <div class="table-footer"><span id="selection-label">已选 0 项</span><div><button class="reset-button" id="reset" hidden>清除筛选</button><span id="visible-count">共 6 项任务</span><span class="footer-divider"></span><span>第 1 / 1 页</span><span class="page-arrows"><span data-icon="chevron-left"></span><span data-icon="chevron-right"></span></span></div></div>
+          </section>
+          <section class="checklist-pane" id="checklist-pane" aria-label="发布清单" hidden>
+            <div class="checklist-top">
+              <span class="checklist-symbol" data-icon="list"></span>
+              <button class="icon-button" id="close-checklist" aria-label="关闭清单" data-icon="close"></button>
+            </div>
+            <h2>发布清单</h2>
+            <p class="checklist-description">列出还没完成的事和各自的截止时间，发布前逐项核对。</p>
+            <ul class="checklist-items" id="checklist-items"></ul>
+            <div class="checklist-empty" id="checklist-empty" hidden><span data-icon="check-circle"></span><div>已经全部准备好了，可以发布</div></div>
+            <div class="checklist-bottom" id="checklist-bottom">
+              <button class="copy-button" id="copy-checklist"><span data-icon="copy"></span><span id="copy-label">复制清单</span></button>
+              <p>仅复制到剪贴板，不会自动发送消息。</p>
+            </div>
           </section>
         </div>
       </section>

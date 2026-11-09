@@ -1,5 +1,6 @@
 import { initialTasks } from './seed-data.mjs';
 import { filterTasks, updateTaskStatus } from './task-filter.mjs';
+import { buildChecklist, checklistToText } from './checklist.mjs';
 
 const paths = {
   layers: '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
@@ -17,6 +18,8 @@ const paths = {
   up: '<path d="M12 19V5m-5 5 5-5 5 5"/>',
   right: '<path d="M5 12h14m-5-5 5 5-5 5"/>',
   down: '<path d="M12 5v14m-5-5 5 5 5-5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  copy: '<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
 };
 const icon = name => `<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(node => { node.innerHTML = icon(node.dataset.icon); });
@@ -26,6 +29,8 @@ const statusIcons = { todo: 'circle', 'in-progress': 'timer', review: 'pending',
 const priorities = { high: ['优先', 'up'], medium: ['常规', 'right'], low: ['从容', 'down'] };
 let tasks = initialTasks.map(task => ({ ...task }));
 let onlyPending = false;
+let checklistOpen = false;
+let copyLabelTimer;
 const selected = new Set();
 
 function render() {
@@ -47,6 +52,7 @@ function render() {
   $('only-pending').setAttribute('aria-pressed', onlyPending);
   $('reset').hidden = !(search || status !== 'all' || priority !== 'all' || onlyPending);
   document.querySelectorAll('[data-nav]').forEach(button => button.classList.toggle('active', button.dataset.nav === (onlyPending ? 'pending' : status === 'done' ? 'done' : 'all')));
+  renderChecklist();
 }
 
 function resetFilters() {
@@ -55,6 +61,51 @@ function resetFilters() {
   $('priority-filter').value = 'all';
   onlyPending = false;
   render();
+}
+
+// 清单始终基于全部任务的当前状态，不受搜索/状态/优先级筛选影响。
+function renderChecklist() {
+  $('checklist-pane').hidden = !checklistOpen;
+  $('workspace-grid').classList.toggle('with-checklist', checklistOpen);
+  $('generate-checklist').setAttribute('aria-expanded', checklistOpen);
+  if (!checklistOpen) return;
+  const items = buildChecklist(tasks);
+  const empty = items.length === 0;
+  $('checklist-items').innerHTML = empty ? '' : items.map(item =>
+    `<li><span class="checklist-bullet"></span><div><div class="checklist-item-title">${item.title}</div><div class="checklist-item-meta">截止：${item.deadline}</div></div></li>`
+  ).join('');
+  $('checklist-empty').hidden = !empty;
+  $('checklist-bottom').hidden = empty;
+  $('copy-checklist').disabled = empty;
+}
+
+function flashCopyLabel(text) {
+  $('copy-label').textContent = text;
+  clearTimeout(copyLabelTimer);
+  copyLabelTimer = setTimeout(() => { $('copy-label').textContent = '复制清单'; }, 1800);
+}
+
+async function copyChecklist() {
+  const text = checklistToText(buildChecklist(tasks));
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      if (!ok) throw new Error('复制失败');
+    }
+    flashCopyLabel('已复制');
+  } catch {
+    flashCopyLabel('复制失败');
+  }
 }
 
 $('search').addEventListener('input', render);
@@ -78,4 +129,7 @@ $('task-rows').addEventListener('change', event => {
   if (event.target.dataset.select) event.target.checked ? selected.add(event.target.dataset.select) : selected.delete(event.target.dataset.select);
   render();
 });
+$('generate-checklist').addEventListener('click', () => { checklistOpen = true; renderChecklist(); });
+$('close-checklist').addEventListener('click', () => { checklistOpen = false; renderChecklist(); });
+$('copy-checklist').addEventListener('click', copyChecklist);
 render();

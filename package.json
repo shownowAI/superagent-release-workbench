@@ -6,7 +6,7 @@
   "description": "苹果风发布工作台的教学示例",
   "scripts": {
     "serve": "python3 -m http.server 5173 --bind 127.0.0.1",
-    "test": "node --test tests/basic.test.mjs",
+    "test": "node --test tests/basic.test.mjs tests/checklist.test.mjs",
     "reproduce": "node --test tests/reproduce.test.mjs"
   },
   "license": "MIT"
